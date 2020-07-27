@@ -42,7 +42,7 @@ export class SignalBox extends EventEmitter {
 
   run() : Promise<void> {
     return new Promise((resolve, reject) => {
-      this.port.set({rts: false}, (err) => {
+      this.port.update({baudRate: 57600}, (err) => {
         if (err) {
           reject(err);
         } else {
@@ -54,7 +54,7 @@ export class SignalBox extends EventEmitter {
 
   stop() : Promise<void> {
     return new Promise((resolve, reject) => {
-      this.port.set({rts: true}, (err) => {
+      this.port.update({baudRate: 9600}, (err) => {
         if (err) {
           reject(err);
         } else {
