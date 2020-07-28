@@ -15,7 +15,7 @@ export class SignalBox extends EventEmitter {
     this.maxSampleValue = 0x3ffc;
 
     this.port.on('readable', () => {
-      this.port.read();
+      this.port.read(8096);
     });
     
     this.port.on('data', (data) => {
