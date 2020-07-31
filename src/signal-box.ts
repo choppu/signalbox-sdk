@@ -63,7 +63,8 @@ export class SignalBox extends EventEmitter {
   }
 
   async stop() : Promise<void> {
-    await this.setBaudRate(BAUD_STOP); 
+    await this.flushSerial();
+    await this.setBaudRate(BAUD_STOP);
     this.isRunning = false;
   }
 
@@ -94,6 +95,14 @@ export class SignalBox extends EventEmitter {
         }
       });
     });
+  }
+
+  async flushSerial() : Promise<void> {
+    return new Promise((resolve, reject) => {
+      this.port.flush((err) => {
+        err ? reject(err) : resolve(); 
+      }); 
+    })
   }
 
   setBaudRate(rate: number) : Promise<void> {
