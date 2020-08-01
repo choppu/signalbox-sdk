@@ -72,4 +72,12 @@ export class BoardConfiguration {
       return null;
     }
   }
+
+  public static fromPlainObject(config: any) : BoardConfiguration {
+    return new BoardConfiguration(
+      config.adcConfiguration.map((adc) => ADCConfiguration.fromPlainObject(adc)),
+      config.dacConfiguration.map((dac) => DACConfiguration.fromPlainObject(dac)),
+      config.opampConfiguration.map((opamp) => OPAMPConfiguration.fromPlainObject(opamp)),
+    );
+  }
 }

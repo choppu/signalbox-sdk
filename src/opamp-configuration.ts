@@ -19,4 +19,8 @@ export class OPAMPConfiguration {
     buf.writeUInt8(invInput, offset++);
     return offset;
   }
+
+  public static fromPlainObject(opamp: any) : OPAMPConfiguration {
+    return new OPAMPConfiguration(opamp.index, opamp.enabled, opamp.gain, opamp.invertingInput);
+  }
 }

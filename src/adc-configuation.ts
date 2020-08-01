@@ -36,4 +36,8 @@ export class ADCConfiguration {
     
     return offset;
   }
+
+  public static fromPlainObject(adc: any) : ADCConfiguration {
+    return new ADCConfiguration(adc.index, adc.enabled, adc.oversampling, adc.prescaler, adc.period, adc.channelConfig);
+  }
 }

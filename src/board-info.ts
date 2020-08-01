@@ -77,4 +77,23 @@ export class BoardInfo {
       return null;
     }
   }
+
+  public static getSampleFrequency(prescaler: number, period: number, boardFrequency: number) : number {
+    return boardFrequency / ((prescaler + 1) * (period + 1));
+  }
+
+  public static getPrescalerAndPeriod(frequency: number, maxPrescaler: number, maxPeriod: number, boardFrequency: number) : {prescaler: number, period: number, precise: boolean} {
+    let eq = Math.round(boardFrequency / frequency);
+    let precise = (eq == boardFrequency / frequency);
+    let prescaler = 0;
+
+    for(let i = 0; i < maxPrescaler; i++) {
+      if (((eq % i) == 0) && (((eq / i) - 1) < maxPeriod)) {
+        prescaler = i;
+        break;
+      }
+    }
+
+    return {prescaler: prescaler - 1, period: (eq / prescaler) - 1, precise: precise};
+  }
 }

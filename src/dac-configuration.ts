@@ -32,4 +32,8 @@ export class DACConfiguration {
     
     return offset;
   }
+
+  public static fromPlainObject(dac: any) : DACConfiguration {
+    return new DACConfiguration(dac.index, dac.enabled, dac.prescaler, dac.period, dac.channelEnabled);
+  }
 }

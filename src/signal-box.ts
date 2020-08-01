@@ -10,8 +10,6 @@ const READABLE = 8096;
 
 export class SignalBox extends EventEmitter {
   port: SerialPort;
-  sampleSize: number;
-  maxSampleValue: number;
   boardInfo: BoardInfo;
   configuration: BoardConfiguration;
   isRunning: boolean;
@@ -21,8 +19,6 @@ export class SignalBox extends EventEmitter {
     super();
 
     this.port = new SerialPort(path, {autoOpen: false});
-    this.sampleSize = 2;
-    this.maxSampleValue = 0x3ffc;
     this.boardInfo = boardInfo;
     this.isRunning = false;
     this.configuration = BoardConfiguration.getDefault(this.boardInfo);
@@ -65,6 +61,7 @@ export class SignalBox extends EventEmitter {
   async stop() : Promise<void> {
     await this.flushSerial();
     await this.setBaudRate(BAUD_STOP);
+    await this.port.read();
     this.isRunning = false;
   }
 
@@ -77,7 +74,8 @@ export class SignalBox extends EventEmitter {
 
   async write(data: number[]) : Promise<void> {
     let encodedData = Buffer.alloc(data.length * 2);
-    data.forEach((el, i) => encodedData.writeUIntLE(el * 0x0fff, i * this.sampleSize, this.sampleSize));
+    data.forEach((el, i) => encodedData.writeUIntLE(el * this.boardInfo.dac[0].maxValue, i * this.boardInfo.dac[0].sampleSize, this.boardInfo.dac[0].sampleSize));
+    await this.doDrain();
     await this.doWrite(encodedData);
   }
 
@@ -117,6 +115,18 @@ export class SignalBox extends EventEmitter {
     }); 
   }
 
+  async doDrain() : Promise<void> {
+    return new Promise((resolve, reject) => {
+      this.port.drain((err) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve();
+        }
+      });
+    }); 
+  }
+
   async doRun() : Promise<void> {
     this.isRunning = true; 
     await this.setBaudRate(BAUD_START);
@@ -125,10 +135,16 @@ export class SignalBox extends EventEmitter {
 
   forwardData(data: Buffer) {
     let parsedData = [];
-    for (let i = 0; i < data.length; i += this.sampleSize) {
-      let sample = (data.readUIntLE(i, this.sampleSize) / this.maxSampleValue);
+    let oversamplingConf = this.configuration.adcConfiguration[0].oversampling;
+    let oversampling = SignalBox.searchInObjectsArray(this.boardInfo.adc[0].supportedOversampling, "value", oversamplingConf) as {label: string, value: number, maxValue: number};
+    for (let i = 0; i < data.length; i += this.boardInfo.adc[0].sampleSize) {
+      let sample = (data.readUIntLE(i, this.boardInfo.adc[0].sampleSize) / oversampling.maxValue);
       parsedData.push(sample);
     }
     this.emit('data-read', parsedData);
+  }
+
+  public static searchInObjectsArray(arr: object[], valLabel: string, val: any) : object {
+    return arr.find((obj) => obj[valLabel] == val);
   }
 }
